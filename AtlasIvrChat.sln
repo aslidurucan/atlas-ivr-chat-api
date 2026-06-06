@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{468B98A4-32F9-44C1-93E3-94EF262D8900}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlasIvrChat.Domain", "src\AtlasIvrChat.Domain\AtlasIvrChat.Domain.csproj", "{24AD42DD-149A-43D0-A0B2-50642AF2012C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlasIvrChat.Infrastructure", "src\AtlasIvrChat.Infrastructure\AtlasIvrChat.Infrastructure.csproj", "{216BC0CC-B892-44E3-A06D-D689146AA94D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlasIvrChat.Api", "src\AtlasIvrChat.Api\AtlasIvrChat.Api.csproj", "{87083440-FD9A-46D1-A9DA-B506CB956006}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{24AD42DD-149A-43D0-A0B2-50642AF2012C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24AD42DD-149A-43D0-A0B2-50642AF2012C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24AD42DD-149A-43D0-A0B2-50642AF2012C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24AD42DD-149A-43D0-A0B2-50642AF2012C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{216BC0CC-B892-44E3-A06D-D689146AA94D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{216BC0CC-B892-44E3-A06D-D689146AA94D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{216BC0CC-B892-44E3-A06D-D689146AA94D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{216BC0CC-B892-44E3-A06D-D689146AA94D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87083440-FD9A-46D1-A9DA-B506CB956006}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87083440-FD9A-46D1-A9DA-B506CB956006}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87083440-FD9A-46D1-A9DA-B506CB956006}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87083440-FD9A-46D1-A9DA-B506CB956006}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{24AD42DD-149A-43D0-A0B2-50642AF2012C} = {468B98A4-32F9-44C1-93E3-94EF262D8900}
+		{216BC0CC-B892-44E3-A06D-D689146AA94D} = {468B98A4-32F9-44C1-93E3-94EF262D8900}
+		{87083440-FD9A-46D1-A9DA-B506CB956006} = {468B98A4-32F9-44C1-93E3-94EF262D8900}
+	EndGlobalSection
+EndGlobal
