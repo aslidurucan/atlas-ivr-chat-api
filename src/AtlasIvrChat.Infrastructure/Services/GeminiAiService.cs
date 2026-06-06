@@ -1,76 +1,66 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 using AtlasIvrChat.Domain.Interfaces;
 using AtlasIvrChat.Domain.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace AtlasIvrChat.Infrastructure.Services;
 
 public class GeminiAiService : IAiService
 {
     private readonly HttpClient _httpClient;
-    private const string ApiKey = "YOUR_GEMINI_API_KEY_HERE";
-    private const string ApiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={ApiKey}";
+    private readonly string _apiKey;
+    private const string ApiUrl = "https://api.groq.com/openai/v1/chat/completions";
 
-    public GeminiAiService(HttpClient httpClient)
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    public GeminiAiService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
+        _apiKey = configuration["GroqSettings:ApiKey"]?.Trim() ?? string.Empty;
     }
 
     public async Task<ChatResponse> GenerateResponseAsync(ChatRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Message))
-        {
             return new ChatResponse { Response = "Gelen mesaj boş olamaz." };
-        }
 
-        var payload = new
-        {
-            contents = new[]
-            {
-                new { parts = new[] { new { text = request.Message } } }
-            }
-        };
+        if (string.IsNullOrWhiteSpace(_apiKey))
+            return new ChatResponse { Response = "API Anahtarı sistemde bulunamadı." };
+
+        var payload = new GroqRequestPayload(
+            Model: "llama-3.1-8b-instant",
+            Messages: [new GroqRequestMessage(Role: "user", Content: request.Message)],
+            Temperature: 0.3
+        );
 
         try
         {
-            var response = await _httpClient.PostAsJsonAsync(ApiUrl, payload);
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ApiUrl);
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            httpRequest.Content = JsonContent.Create(payload, options: JsonOptions);
 
-            if (!response.IsSuccessStatusCode)
-            {
-                return new ChatResponse { Response = "Yapay zeka servisi şu an yanıt veremiyor. Lütfen tekrar deneyiniz." };
-            }
+            var response = await _httpClient.SendAsync(httpRequest);
+            response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<GeminiResponseStructure>();
+            var result = await response.Content.ReadFromJsonAsync<GroqResponseStructure>(JsonOptions);
+            var aiText = result?.Choices?[0].Message.Content ?? "Anlayamadım, tekrar eder misiniz?";
 
-            string aiText = result?.Candidates?[0]?.Content?.Parts?[0]?.Text ?? "Anlayamadım, tekrar eder misiniz?";
-
-            return new ChatResponse
-            {
-                Response = aiText.Trim()
-            };
+            return new ChatResponse { Response = aiText.Trim() };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return new ChatResponse { Response = "Sistemsel bir hata oluştu. Lütfen hattan ayrılmayınız." };
+            return new ChatResponse { Response = $"Sistemsel bir kesinti oluştu. (Hata: {ex.Message})" };
         }
     }
 }
 
-internal class GeminiResponseStructure
-{
-    public Candidate[]? Candidates { get; set; }
-}
-
-internal class Candidate
-{
-    public Content? Content { get; set; }
-}
-
-internal class Content
-{
-    public Part[]? Parts { get; set; }
-}
-
-internal class Part
-{
-    public string? Text { get; set; }
-}
+internal record GroqRequestPayload(string Model, GroqRequestMessage[] Messages, double Temperature);
+internal record GroqRequestMessage(string Role, string Content);
+internal record GroqResponseStructure(Choice[] Choices);
+internal record Choice(GroqMessage Message);
+internal record GroqMessage(string Content);
