@@ -1,6 +1,6 @@
 # 📞 AI-Powered IVR Chat API
 
-Bu proje, .NET 8 mimarisi kullanılarak geliştirilmiş, yapay zeka destekli bir Sesli Yanıt (IVR) Chat API uygulamasıdır [source: 1]. Proje, kurumsal yazılım standartları gözetilerek **Clean Architecture** prensiplerine uygun olarak katmanlandırılmış ve tamamen **Dockerize** edilmiştir.
+Bu proje, .NET 8 mimarisi kullanılarak geliştirilmiş, yapay zeka destekli bir Sesli Yanıt (IVR) Chat API uygulamasıdır. Proje, kurumsal yazılım standartları gözetilerek **Clean Architecture** prensiplerine uygun olarak katmanlandırılmış ve tamamen **Dockerize** edilmiştir.
 
 ---
 
@@ -8,54 +8,123 @@ Bu proje, .NET 8 mimarisi kullanılarak geliştirilmiş, yapay zeka destekli bir
 
 Projede iş kurallarının (business rules) ve çekirdek mantığın teknolojik bağımlılıklardan izole edilmesi amacıyla **Clean Architecture** ve **DDD (Domain-Driven Design)** yaklaşımları benimsenmiştir.
 
-* **AtlasIvrChat.Domain:** Projenin kalbidir. Hiçbir dış kütüphane veya katman bağımlılığı barındırmaz. Yapay zeka servis kontratı (`IAiService`) ve veri modelleri (`ChatRequest`, `ChatResponse`) bu katmanda izole edilmiştir.
-* **AtlasIvrChat.Infrastructure:** Harici servis entegrasyonlarının çözüldüğü katmandır. Yapay zeka sağlayıcısı olarak **Groq API (`llama-3.1-8b-instant`)** entegrasyonu bu katmanda somutlaştırılmıştır.
-* **AtlasIvrChat.Api:** HTTP isteklerini karşılayan, istek validasyonlarını (Attribute-based Validation) yürüten ve merkezi hata yönetimini (`ExceptionHandlingMiddleware`) barındıran sunum katmanıdır.
+### AtlasIvrChat.Domain
 
-### Neden Groq API & Llama 3.1?
-IVR senaryolarında milisaniyeler seviyesindeki yanıt süreleri (low latency) müşteri deneyimi için kritiktir. Groq mimarisi, çıkarım (inference) hızında endüstri lideri olduğu ve açık kaynaklı güçlü `llama-3.1-8b-instant` modelini ücretsiz/yüksek kotalı sunduğu için tercih edilmiştir.
+Projenin kalbidir. Hiçbir dış kütüphane veya katman bağımlılığı barındırmaz.
+
+- `IAiService` servis kontratı
+- `ChatRequest`
+- `ChatResponse`
+
+modelleri bu katmanda izole edilmiştir.
+
+### AtlasIvrChat.Infrastructure
+
+Harici servis entegrasyonlarının çözüldüğü katmandır.
+
+- Groq API (`llama-3.1-8b-instant`) entegrasyonu
+- Yapılandırma yönetimi
+- Harici servis adaptörleri
+
+Katmanlar arası bağımlılığı azaltmak amacıyla .NET'in yerleşik `double.TryParse` ve `CultureInfo.InvariantCulture` mekanizmaları kullanılarak tip güvenli (type-safe) dönüşümler sağlanmıştır.
+
+### AtlasIvrChat.Api
+
+HTTP isteklerini karşılayan sunum katmanıdır.
+
+- Attribute-based Validation
+- ExceptionHandlingMiddleware
+- REST API Endpoint'leri
+- Swagger/OpenAPI
+
+---
+
+## 🤖 Neden Groq API & Llama 3.1?
+
+IVR senaryolarında milisaniyeler seviyesindeki yanıt süreleri müşteri deneyimi açısından kritik öneme sahiptir.
+
+Groq altyapısı;
+
+- Çok düşük gecikme süresi (low latency)
+- Yüksek çıkarım (inference) performansı
+- Ücretsiz / yüksek kota
+- Güçlü açık kaynak modeller
+
+sunması nedeniyle tercih edilmiştir.
 
 ---
 
 ## 🐋 Docker ve Güvenlik Altyapısı
 
-* **Multi-Stage Build:** `Dockerfile` mimarisinde derleme (SDK) ve çalışma zamanı (Runtime) katmanları ayrılarak minimum imaj boyutu ve maksimum güvenlik (reduced attack surface) elde edilmiştir.
-* **Zero-Leak Secret Management:** Canlı API anahtarları (`ApiKey`) kaynak koda veya `appsettings.json` dosyasına gömülmemiştir. Yerel ortamdaki `.NET Secret Manager` yapısının Docker konteynerine güvenli aktarılması için **Volume Mount (Read-Only)** yöntemi tercih edilmiştir. Böylece `docker-compose.yml` şifresiz ve güvenli bir şekilde sürümlendirilebilmiştir.
+### Multi-Stage Build
+
+Dockerfile içerisinde SDK ve Runtime katmanları ayrıştırılmıştır.
+
+Avantajları:
+
+- Daha küçük imaj boyutu
+- Daha hızlı dağıtım
+- Daha düşük saldırı yüzeyi
+- Daha güvenli çalışma ortamı
+
+### Platform-Agnostic Secret Injection
+
+Canlı API anahtarları kaynak koda gömülmemiştir.
+
+Docker konteyneri çalışırken gerekli anahtarlar host makineden ortam değişkenleri aracılığıyla alınmaktadır.
 
 ---
 
-## 🛠️ Kurulum ve Çalıştırma Rehberi (Test Süreci)
-
-Bu projeyi yerel ortamınızda test etmek ve Docker üzerinde ayağa kaldırmak için aşağıdaki adımları sırasıyla uygulayınız.
+## 🛠️ Kurulum ve Çalıştırma Rehberi
 
 ### 1. Ön Gereksinimler
-* Bilgisayarınızda **Docker Desktop**'ın kurulu ve çalışır durumda olması gerekmektedir.
-* API'nin yapay zeka yanıtları üretebilmesi için ücretsiz bir **Groq API Key** gereklidir. (Kendi anahtarınızı [Groq Console](https://console.groq.com/) üzerinden ücretsiz oluşturabilirsiniz).
 
-### 2. Groq API Key Tanımlama (.NET Secret Manager)
-Projenin "Fail-Fast" mimari prensibi gereği, API Key tanımlanmadan sistem ayağa kalkmayacaktır. Bilgisayarınızda bir terminal açarak projenin kök dizinine gidiniz ve aşağıdaki komutla kendi API anahtarınızı yerel sisteminize güvenli bir şekilde tanımlayınız:
+- Docker Desktop kurulu olmalıdır.
+- Geçerli bir Groq API Key gereklidir.
 
-```bash
-# Proje kök dizinindeyken API katmanına gizli anahtarınızı ekleyin
-dotnet user-secrets set "GroqSettings:ApiKey" "YOUR_GROQ_API_KEY_HERE" --project src/AtlasIvrChat.Api
-```
+API anahtarınızı aşağıdaki adresten ücretsiz oluşturabilirsiniz:
 
-### 🚀 Projeyi Çalıştırma
-Docker ile Çalıştırma
+https://console.groq.com/
 
-Gerekli ortam değişkenlerini ve yapılandırmaları tamamladıktan sonra, proje kök dizininde aşağıdaki komutu çalıştırın:
-```bash
+---
+
+## 🚀 2. Projeyi Docker Üzerinde Çalıştırma
+
+Uygulamanın platform bağımsız çalışabilmesi ve hassas bilgilerin kaynak koda sızmaması amacıyla Environment Variable yaklaşımı kullanılmıştır.
+
+### Windows PowerShell
+
+```powershell
+# API anahtarını geçici olarak tanımlayın
+$env:GROQ_API_KEY="KENDI_GROQ_API_ANAHTARINIZ"
+
+# Docker containerlarını oluşturup çalıştırın
 docker compose up -d --build
 ```
-Bu komut:
 
-Docker imajlarını oluşturur.
-Gerekli servisleri başlatır.
-Uygulamayı arka planda çalıştırır.
+### Mac / Linux / Git Bash
+
+```bash
+# API anahtarını tanımlayın
+export GROQ_API_KEY="KENDI_GROQ_API_ANAHTARINIZ"
+
+# Docker containerlarını oluşturup çalıştırın
+docker compose up -d --build
+```
+
+Bu işlem:
+
+- Docker imajlarını oluşturur
+- Ortam değişkenlerini konteynere aktarır
+- Servisleri ayağa kaldırır
+- Uygulamayı arka planda çalıştırır
 
 Uygulama başarıyla başlatıldıktan sonra aşağıdaki adresten erişilebilir olacaktır:
 
+```text
 http://localhost:8080
+```
+
 ---
 
 ## 🧪 API Testi
@@ -72,21 +141,44 @@ Swagger UI üzerinden tüm endpoint'leri görüntüleyebilir ve doğrudan test e
 
 ---
 
-### 📬 Postman veya cURL ile Test
+## ☕ Visual Studio HTTP Client ile Test
 
-#### Endpoint
+Proje içerisinde bulunan:
+
+```text
+src/AtlasIvrChat.Api/AtlasIvrChat.Api.http
+```
+
+dosyasını açarak Visual Studio üzerinden doğrudan test gerçekleştirebilirsiniz.
+
+```http
+@HostAddress = http://localhost:8080
+
+POST {{HostAddress}}/api/chat
+Content-Type: application/json
+
+{
+  "message": "Merhaba"
+}
+```
+
+---
+
+## 📬 Postman veya cURL ile Test
+
+### Endpoint
 
 ```http
 POST http://localhost:8080/api/chat
 ```
 
-#### Headers
+### Headers
 
 ```http
 Content-Type: application/json
 ```
 
-#### Request Body
+### Request Body
 
 ```json
 {
@@ -94,7 +186,7 @@ Content-Type: application/json
 }
 ```
 
-#### cURL Örneği
+### cURL Örneği
 
 ```bash
 curl -X POST "http://localhost:8080/api/chat" \
@@ -104,10 +196,56 @@ curl -X POST "http://localhost:8080/api/chat" \
 }'
 ```
 
-#### Örnek Response
+### Başarılı Response (HTTP 200)
 
 ```json
 {
   "response": "Merhaba! Size nasıl yardımcı olabilirim?"
 }
 ```
+
+### Validasyon Hatası (HTTP 400)
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Message": [
+      "Gelen mesaj boş olamaz."
+    ]
+  }
+}
+```
+
+---
+
+## 📂 Proje Yapısı
+
+```text
+.
+├── src
+│   ├── AtlasIvrChat.Api
+│   ├── AtlasIvrChat.Domain
+│   └── AtlasIvrChat.Infrastructure
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## 🛠️ Kullanılan Teknolojiler
+
+- .NET 8
+- ASP.NET Core Web API
+- Clean Architecture
+- DDD (Domain-Driven Design)
+- Groq API
+- Llama 3.1 8B Instant
+- Docker
+- Docker Compose
+- Swagger / OpenAPI
+
+---
