@@ -169,14 +169,15 @@ Uygulama ayağa kalktıktan sonra Swagger UI otomatik olarak kullanılabilir ola
 ```text
 http://localhost:8080/swagger/index.html
 ```
-
+![Docker Swagger Testi](docs/docker.png)
 #### Lokal Çalıştırma
 
 ```text
 http://localhost:5203/swagger/index.html
 ```
-
+![Docker Swagger Testi](docs/lokal.png)
 Swagger UI üzerinden tüm endpoint'leri görüntüleyebilir ve doğrudan test edebilirsiniz.
+
 
 ## ☕ Visual Studio HTTP Client ile Test
 
@@ -187,6 +188,7 @@ src/AtlasIvrChat.Api/AtlasIvrChat.Api.http
 ```
 
 dosyasını açarak Visual Studio üzerinden doğrudan test gerçekleştirebilirsiniz.
+![Visual Studio HTTP Client Testi](docs/http.png)
 
 ```http
 @HostAddress = http://localhost:8080
@@ -222,7 +224,7 @@ Content-Type: application/json
   "message": "Merhaba"
 }
 ```
-
+![Postman İstek Testi](docs/postman.png)
 ### cURL Örneği
 
 ```bash
@@ -240,7 +242,7 @@ curl -X POST "http://localhost:8080/api/chat" \
   "response": "Merhaba! Size nasıl yardımcı olabilirim?"
 }
 ```
-
+![Curl İstek Testi](docs/cmd.png)
 ### Validasyon Hatası (HTTP 400)
 
 ```json
