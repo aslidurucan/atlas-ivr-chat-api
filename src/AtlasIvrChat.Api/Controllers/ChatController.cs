@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AtlasIvrChat.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/chat")]
 public class ChatController : ControllerBase
 {
     private readonly IAiService _aiService;

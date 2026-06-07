@@ -8,7 +8,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddHttpClient<IAiService, GroqAiService>();
+builder.Services.AddHttpClient<IAiService, GroqAiService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 
 var app = builder.Build();
 
