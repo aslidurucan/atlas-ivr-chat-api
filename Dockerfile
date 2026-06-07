@@ -8,14 +8,10 @@ WORKDIR /src
 COPY ["src/AtlasIvrChat.Api/AtlasIvrChat.Api.csproj", "src/AtlasIvrChat.Api/"]
 COPY ["src/AtlasIvrChat.Infrastructure/AtlasIvrChat.Infrastructure.csproj", "src/AtlasIvrChat.Infrastructure/"]
 COPY ["src/AtlasIvrChat.Domain/AtlasIvrChat.Domain.csproj", "src/AtlasIvrChat.Domain/"]
-
-
 RUN dotnet restore "src/AtlasIvrChat.Api/AtlasIvrChat.Api.csproj"
 
 COPY . .
 WORKDIR "/src/src/AtlasIvrChat.Api"
-RUN dotnet build "AtlasIvrChat.Api.csproj" -c Release -o /app/build
-
 
 FROM build AS publish
 RUN dotnet publish "AtlasIvrChat.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false

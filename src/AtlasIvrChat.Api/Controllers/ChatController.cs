@@ -18,11 +18,6 @@ public class ChatController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] ChatRequest request)
     {
-        if (request == null || string.IsNullOrWhiteSpace(request.Message))
-        {
-            return BadRequest(new { Message = "İstek modeli veya 'message' alanı boş olamaz." });
-        }
-
         var result = await _aiService.GenerateResponseAsync(request);
 
         return Ok(result);

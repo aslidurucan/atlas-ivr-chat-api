@@ -8,7 +8,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddHttpClient<IAiService, GeminiAiService>();
+builder.Services.AddHttpClient<IAiService, GroqAiService>();
 
 var app = builder.Build();
 

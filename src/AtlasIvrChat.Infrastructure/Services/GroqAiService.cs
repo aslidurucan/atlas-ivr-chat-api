@@ -4,13 +4,17 @@ using System.Text.Json;
 using AtlasIvrChat.Domain.Interfaces;
 using AtlasIvrChat.Domain.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace AtlasIvrChat.Infrastructure.Services;
 
-public class GeminiAiService : IAiService
+public class GroqAiService : IAiService
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
+    private readonly string _model;
+    private readonly double _temperature;
+    private readonly ILogger<GroqAiService> _logger;
     private const string ApiUrl = "https://api.groq.com/openai/v1/chat/completions";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -18,24 +22,26 @@ public class GeminiAiService : IAiService
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public GeminiAiService(HttpClient httpClient, IConfiguration configuration)
+    public GroqAiService(HttpClient httpClient, IConfiguration configuration, ILogger<GroqAiService> logger)
     {
         _httpClient = httpClient;
-        _apiKey = configuration["GroqSettings:ApiKey"]?.Trim() ?? string.Empty;
+        _logger = logger;
+
+        _apiKey = configuration["GroqSettings:ApiKey"]?.Trim()
+                  ?? throw new InvalidOperationException("GroqSettings:ApiKey sistemde yapılandırılamadı.");
+
+        _model = configuration["GroqSettings:Model"]?.Trim() ?? "llama-3.1-8b-instant";
+
+        _temperature = double.TryParse(configuration["GroqSettings:Temperature"], out var temp) ? temp : 0.3;
     }
 
     public async Task<ChatResponse> GenerateResponseAsync(ChatRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Message))
-            return new ChatResponse { Response = "Gelen mesaj boş olamaz." };
-
-        if (string.IsNullOrWhiteSpace(_apiKey))
-            return new ChatResponse { Response = "API Anahtarı sistemde bulunamadı." };
 
         var payload = new GroqRequestPayload(
-            Model: "llama-3.1-8b-instant",
+            Model: _model,
             Messages: [new GroqRequestMessage(Role: "user", Content: request.Message)],
-            Temperature: 0.3
+            Temperature: _temperature
         );
 
         try
@@ -48,13 +54,20 @@ public class GeminiAiService : IAiService
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<GroqResponseStructure>(JsonOptions);
-            var aiText = result?.Choices?[0].Message.Content ?? "Anlayamadım, tekrar eder misiniz?";
+
+            var aiText = result?.Choices?.FirstOrDefault()?.Message?.Content ?? "Anlayamadım, tekrar eder misiniz?";
 
             return new ChatResponse { Response = aiText.Trim() };
         }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Groq API uç noktasıyla iletişim kurulurken bir HTTP hatası oluştu. Mesaj: {Message}", ex.Message);
+            throw;
+        }
         catch (Exception ex)
         {
-            return new ChatResponse { Response = $"Sistemsel bir kesinti oluştu. (Hata: {ex.Message})" };
+            _logger.LogError(ex, "Yapar zeka yanıtı işlenirken beklenmeyen bir iç hata meydana geldi.");
+            throw;
         }
     }
 }
