@@ -1,4 +1,3 @@
-
 services:
   ivr-chat-api:
     image: atlas-ivr-chat-api:latest
@@ -11,6 +10,5 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - GroqSettings__ApiKey=${GROQ_API_KEY}
     restart: always

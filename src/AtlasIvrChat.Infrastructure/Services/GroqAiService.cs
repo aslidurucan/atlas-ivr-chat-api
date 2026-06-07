@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using AtlasIvrChat.Domain.Interfaces;
 using AtlasIvrChat.Domain.Models;
+using AtlasIvrChat.Infrastructure.Models; 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -31,13 +32,14 @@ public class GroqAiService : IAiService
                   ?? throw new InvalidOperationException("GroqSettings:ApiKey sistemde yapılandırılamadı.");
 
         _model = configuration["GroqSettings:Model"]?.Trim() ?? "llama-3.1-8b-instant";
-
-        _temperature = double.TryParse(configuration["GroqSettings:Temperature"], out var temp) ? temp : 0.3;
+        var tempStr = configuration["GroqSettings:Temperature"];
+        _temperature = double.TryParse(tempStr, System.Globalization.CultureInfo.InvariantCulture, out var parsedTemp)
+            ? parsedTemp
+            : 0.3;
     }
 
-    public async Task<ChatResponse> GenerateResponseAsync(ChatRequest request)
+    public async Task<ChatResponse> GenerateResponseAsync(ChatRequest request, CancellationToken cancellationToken = default)
     {
-
         var payload = new GroqRequestPayload(
             Model: _model,
             Messages: [new GroqRequestMessage(Role: "user", Content: request.Message)],
@@ -50,14 +52,18 @@ public class GroqAiService : IAiService
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
             httpRequest.Content = JsonContent.Create(payload, options: JsonOptions);
 
-            var response = await _httpClient.SendAsync(httpRequest);
+            var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<GroqResponseStructure>(JsonOptions);
-
+            var result = await response.Content.ReadFromJsonAsync<GroqResponseStructure>(JsonOptions, cancellationToken);
             var aiText = result?.Choices?.FirstOrDefault()?.Message?.Content ?? "Anlayamadım, tekrar eder misiniz?";
 
             return new ChatResponse { Response = aiText.Trim() };
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("IVR Çağrı sahibi yanıtı beklemeden telefonu kapattı, Groq isteği iptal edildi.");
+            throw;
         }
         catch (HttpRequestException ex)
         {
@@ -66,14 +72,8 @@ public class GroqAiService : IAiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Yapar zeka yanıtı işlenirken beklenmeyen bir iç hata meydana geldi.");
+            _logger.LogError(ex, "Yapay zeka yanıtı işlenirken beklenmeyen bir iç hata meydana geldi.");
             throw;
         }
     }
 }
-
-internal record GroqRequestPayload(string Model, GroqRequestMessage[] Messages, double Temperature);
-internal record GroqRequestMessage(string Role, string Content);
-internal record GroqResponseStructure(Choice[] Choices);
-internal record Choice(GroqMessage Message);
-internal record GroqMessage(string Content);

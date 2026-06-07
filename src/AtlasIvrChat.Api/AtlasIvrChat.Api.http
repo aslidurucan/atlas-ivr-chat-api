@@ -1,6 +1,9 @@
-@AtlasIvrChat.Api_HostAddress = http://localhost:5203
+@HostAddress = http://localhost:8080
 
-GET {{AtlasIvrChat.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{HostAddress}}/api/chat
+Content-Type: application/json
 
+{
+  "message": "Merhaba"
+}
 ###
