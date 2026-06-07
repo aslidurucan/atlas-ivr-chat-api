@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using AtlasIvrChat.Domain.Interfaces;
 using AtlasIvrChat.Domain.Models;
-using AtlasIvrChat.Infrastructure.Models; 
+using AtlasIvrChat.Infrastructure.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -62,18 +62,16 @@ public class GroqAiService : IAiService
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("IVR Çağrı sahibi yanıtı beklemeden telefonu kapattı, Groq isteği iptal edildi.");
-            throw;
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "Groq API uç noktasıyla iletişim kurulurken bir HTTP hatası oluştu. Mesaj: {Message}", ex.Message);
             throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Yapay zeka yanıtı işlenirken beklenmeyen bir iç hata meydana geldi.");
-            throw;
+            _logger.LogError(ex, "Yapay zeka entegrasyon katmanında bir kriz oluştu. Sabit fallback yanıtı devreye alınıyor.");
+
+            return new ChatResponse
+            {
+                Response = "Şu anda işlemlerinizi gerçekleştiremiyorum. Lütfen daha sonra tekrar arayınız."
+            };
         }
     }
 }

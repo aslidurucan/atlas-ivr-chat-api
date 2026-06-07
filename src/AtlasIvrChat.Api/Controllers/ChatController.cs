@@ -16,10 +16,9 @@ public class ChatController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody] ChatRequest request)
+    public async Task<IActionResult> Post([FromBody] ChatRequest request, CancellationToken cancellationToken)
     {
-        var result = await _aiService.GenerateResponseAsync(request);
-
+        var result = await _aiService.GenerateResponseAsync(request, cancellationToken);
         return Ok(result);
     }
 }
