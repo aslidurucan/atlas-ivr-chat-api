@@ -1,8 +1,5 @@
 ﻿using System.Net;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace AtlasIvrChat.Api.Middlewares;
 
@@ -25,6 +22,11 @@ public class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("IVR çağrı sahibi telefonu kapattığı için HTTP isteği iptal edildi.");
+            context.Response.StatusCode = 499;
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Uygulama genelinde yakalanamayan bir hata oluştu: {Message}", ex.Message);
@@ -44,11 +46,7 @@ public class ExceptionHandlingMiddleware
             DetailedMessage = _env.IsDevelopment() ? exception.Message : null
         };
 
-        var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        return context.Response.WriteAsync(jsonResponse);
+        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        return context.Response.WriteAsync(json);
     }
 }
