@@ -127,19 +127,56 @@ http://localhost:8080
 
 ---
 
+
+## 💻 3. Projeyi Lokal Olarak Çalıştırma (IDE / CLI)
+
+Projeyi Docker kullanmadan doğrudan geliştirme ortamınızda çalıştırmak isterseniz, .NET User Secrets altyapısı hazır olarak yapılandırılmıştır.
+
+### Groq API Key Tanımlama
+
+Öncelikle API anahtarınızı yerel User Secrets deposuna kaydedin:
+
+```bash
+dotnet user-secrets set "GroqSettings:ApiKey" "KENDI_GROQ_API_ANAHTARINIZ" --project src/AtlasIvrChat.Api
+```
+
+### Uygulamayı Başlatma
+
+Ardından API projesini çalıştırın:
+
+```bash
+dotnet run --project src/AtlasIvrChat.Api
+```
+
+Uygulama varsayılan olarak aşağıdaki adreste erişilebilir olacaktır:
+
+```text
+http://localhost:5203
+```
+
+> Not: Port numarası `launchSettings.json` yapılandırmasına göre farklılık gösterebilir.
+
+---
+
 ## 🧪 API Testi
 
 Uygulama ayağa kalktıktan sonra Swagger UI otomatik olarak kullanılabilir olacaktır.
 
 ### Swagger UI
 
+#### Docker Ortamı
+
 ```text
 http://localhost:8080/swagger/index.html
 ```
 
-Swagger UI üzerinden tüm endpoint'leri görüntüleyebilir ve doğrudan test edebilirsiniz.
+#### Lokal Çalıştırma
 
----
+```text
+http://localhost:5203/swagger/index.html
+```
+
+Swagger UI üzerinden tüm endpoint'leri görüntüleyebilir ve doğrudan test edebilirsiniz.
 
 ## ☕ Visual Studio HTTP Client ile Test
 
